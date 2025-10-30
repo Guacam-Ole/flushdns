@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flush DNS - The Ultimate DNS Matching Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #game-container {
+            width: 100vw;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 0;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #game-header {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        #game-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            font-size: 16px;
+            flex-wrap: wrap;
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #game-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+            background: #f0f4f8;
+        }
+
+        /* Left side - Users */
+        #users-area {
+            width: 20%;
+            background: linear-gradient(180deg, #e0e7ff 0%, #c7d2fe 100%);
+            border-right: 3px solid #6366f1;
+            padding: 15px 10px;
+            display: grid;
+            grid-template-rows: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            overflow: hidden;
+        }
+
+        .user {
+            background: white;
+            border-radius: 12px;
+            padding: 10px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            transition: transform 0.2s;
+            position: relative;
+            min-height: 0;
+        }
+
+        .user.active {
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+            border: 2px solid #6366f1;
+        }
+
+        .user-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+
+        .user-computer {
+            width: 40px;
+            height: 28px;
+            background: #334155;
+            border-radius: 4px;
+            position: relative;
+            margin-top: 4px;
+        }
+
+        .user-computer::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 4px;
+            background: #475569;
+            border-radius: 0 0 10px 10px;
+        }
+
+        .typing-indicator {
+            position: absolute;
+            top: 5px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            opacity: 0;
+        }
+
+        .typing-indicator.active {
+            animation: typing 0.5s infinite;
+            opacity: 1;
+        }
+
+        @keyframes typing {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        .user-mood {
+            font-size: 20px;
+            transition: all 0.3s;
+        }
+
+        .url-bubble {
+            background: #3b82f6;
+            color: white;
+            padding: 6px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-align: center;
+            max-width: 90%;
+            word-break: break-all;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+        }
+
+        /* Center - Connection lanes */
+        #lanes-area {
+            flex: 1;
+            position: relative;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 19.5%,
+                    #cbd5e1 19.5%,
+                    #cbd5e1 20.5%
+                );
+        }
+
+        .lane {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 20%;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .lane:nth-child(1) { top: 0; }
+        .lane:nth-child(2) { top: 20%; }
+        .lane:nth-child(3) { top: 40%; }
+        .lane:nth-child(4) { top: 60%; }
+        .lane:nth-child(5) { top: 80%; }
+
+        .dns-request {
+            position: absolute;
+            background: white;
+            border: 3px solid #3b82f6;
+            border-radius: 12px;
+            padding: 10px 15px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .dns-request:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+        }
+
+        .dns-request.selected {
+            border-color: #10b981;
+            background: #d1fae5;
+            transform: scale(1.1);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+
+        .dns-request.timeout {
+            border-color: #ef4444;
+            background: #fee2e2;
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .dns-request.matched {
+            animation: matchSuccess 0.5s forwards;
+        }
+
+        @keyframes matchSuccess {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(0); opacity: 0; }
+        }
+
+        /* Right side - Server racks */
+        #servers-area {
+            width: 25%;
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+            border-left: 3px solid #475569;
+            padding: 15px 10px;
+            display: grid;
+            grid-template-columns: 1fr;
+            grid-template-rows: repeat(5, minmax(0, 1fr));
+            gap: 10px;
+            overflow: hidden;
+            align-content: stretch;
+            grid-auto-flow: column;
+        }
+
+        #servers-area.cols-2 {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        #servers-area.cols-3 {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .server-rack {
+            background: linear-gradient(135deg, #334155 0%, #1e293b 100%);
+            border-radius: 12px;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 3px solid transparent;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        .server-rack:hover {
+            transform: scale(1.05);
+            border-color: #6366f1;
+        }
+
+        .server-rack.selectable {
+            animation: pulse 1s infinite;
+            border-color: #10b981;
+        }
+
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+        }
+
+        .server-rack.correct-match {
+            animation: correctPulse 0.5s;
+        }
+
+        @keyframes correctPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); background: #10b981; }
+        }
+
+        .server-rack.show-correct {
+            animation: showCorrect 2s;
+            border-color: #10b981 !important;
+            z-index: 100;
+        }
+
+        @keyframes showCorrect {
+            0% { 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 1);
+                border-color: #10b981;
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            }
+            10% { 
+                box-shadow: 0 0 30px 15px rgba(16, 185, 129, 0.8);
+                transform: scale(1.15);
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            }
+            90% { 
+                box-shadow: 0 0 30px 15px rgba(16, 185, 129, 0.8);
+                transform: scale(1.15);
+                background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+                transform: scale(1);
+            }
+        }
+
+        .server-rack.show-correct .server-logo {
+            background: #10b981 !important;
+            animation: logoGlow 2s;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% { 
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            10%, 90% { 
+                text-shadow: 0 0 20px rgba(255, 255, 255, 0.9),
+                            0 0 30px rgba(16, 185, 129, 0.8),
+                            2px 2px 4px rgba(0, 0, 0, 0.3);
+                transform: scale(1.2);
+            }
+        }
+
+        .server-logo {
+            width: 100%;
+            height: 100%;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        #servers-area.cols-2 .server-logo {
+            font-size: 36px;
+        }
+
+        #servers-area.cols-3 .server-logo {
+            font-size: 30px;
+        }
+
+        .server-lights {
+            display: none;
+        }
+
+        .server-label {
+            display: none;
+        }
+
+        /* UI Elements */
+        #start-screen, #game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            color: white;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #start-screen h2, #game-over-screen h2 {
+            font-size: clamp(32px, 6vw, 48px);
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #start-screen p, #game-over-screen p {
+            font-size: clamp(16px, 2.5vw, 20px);
+            margin-bottom: 30px;
+            text-align: center;
+            max-width: 600px;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: clamp(16px, 2.5vw, 20px);
+            font-weight: 700;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-download:hover {
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        #game-over-screen .btn {
+            margin: 10px;
+        }
+
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            max-width: 90%;
+        }
+
+        .instructions ul {
+            list-style-position: inside;
+            text-align: left;
+            font-size: clamp(14px, 2vw, 16px);
+        }
+
+        .instructions li {
+            margin: 8px 0;
+        }
+
+        .level-selector {
+            background: rgba(255, 255, 255, 0.15);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .level-selector label {
+            font-size: clamp(16px, 2.5vw, 20px);
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .level-selector select {
+            font-size: clamp(14px, 2vw, 18px);
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 2px solid #6366f1;
+            background: white;
+            color: #1e293b;
+            font-weight: 600;
+            cursor: pointer;
+            min-width: 200px;
+            transition: all 0.2s;
+        }
+
+        .level-selector select:hover {
+            border-color: #818cf8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .level-selector select:focus {
+            outline: none;
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        #level-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 72px;
+            font-weight: 700;
+            color: white;
+            text-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 500;
+            background: rgba(0, 0, 0, 0.85);
+            padding: 40px 60px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 3px solid rgba(99, 102, 241, 0.5);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            max-width: 80%;
+            min-width: 400px;
+        }
+
+        #level-indicator.show {
+            animation: levelShow 2s forwards;
+        }
+
+        @keyframes levelShow {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+        }
+
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            font-size: 24px;
+            opacity: 0;
+            z-index: 999;
+        }
+
+        .particle.show {
+            animation: particle-float 1s forwards;
+        }
+
+        @keyframes particle-float {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-100px); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1400px) {
+            #game-header h1 { font-size: 22px; }
+            .stats { font-size: 15px; gap: 15px; }
+        }
+
+        @media (max-width: 1200px) {
+            #users-area { width: 18%; padding: 10px 8px; }
+            #servers-area { width: 28%; padding: 10px 8px; }
+            
+            .user { padding: 8px; gap: 5px; }
+            .user-avatar { width: 45px; height: 45px; font-size: 22px; }
+            .user-computer { width: 36px; height: 25px; }
+            .user-mood { font-size: 18px; }
+            
+            .server-logo { font-size: 36px; }
+            #servers-area.cols-2 .server-logo { font-size: 30px; }
+            #servers-area.cols-3 .server-logo { font-size: 26px; }
+            
+            .dns-request { font-size: 14px; padding: 8px 12px; }
+        }
+
+        @media (max-width: 1000px) {
+            #game-header h1 { font-size: 20px; }
+            #game-header { padding: 8px 15px; }
+            .stats { font-size: 14px; gap: 12px; }
+            
+            #users-area { width: 16%; padding: 8px 6px; gap: 8px; }
+            #servers-area { width: 30%; padding: 8px 6px; gap: 8px; }
+            
+            .user { padding: 6px; gap: 4px; }
+            .user-avatar { width: 40px; height: 40px; font-size: 20px; }
+            .user-computer { width: 32px; height: 22px; }
+            .user-computer::after { width: 40px; height: 3px; bottom: -5px; }
+            .user-mood { font-size: 16px; }
+            
+            .server-logo { font-size: 32px; }
+            #servers-area.cols-2 .server-logo { font-size: 28px; }
+            #servers-area.cols-3 .server-logo { font-size: 24px; }
+            
+            .dns-request { font-size: 13px; padding: 6px 10px; }
+        }
+
+        @media (max-width: 800px) {
+            #game-header h1 { font-size: 18px; }
+            .stats { font-size: 13px; gap: 10px; }
+            
+            #users-area { width: 15%; padding: 6px 4px; gap: 6px; }
+            #servers-area { width: 32%; padding: 6px 4px; gap: 6px; }
+            
+            .user { padding: 5px; gap: 3px; border-radius: 8px; }
+            .user-avatar { width: 35px; height: 35px; font-size: 18px; }
+            .user-computer { width: 28px; height: 20px; }
+            .user-computer::after { width: 35px; height: 3px; bottom: -4px; }
+            .user-mood { font-size: 14px; }
+            
+            .server-rack { border-radius: 8px; }
+            .server-logo { font-size: 28px; border-radius: 8px; }
+            #servers-area.cols-2 .server-logo { font-size: 24px; }
+            #servers-area.cols-3 .server-logo { font-size: 20px; }
+            
+            .dns-request { font-size: 12px; padding: 5px 8px; border-radius: 8px; }
+            
+            #level-indicator { 
+                font-size: 48px; 
+                padding: 30px 40px;
+                min-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <div id="game-header">
+            <h1>🌐 FLUSH DNS</h1>
+            <div class="stats">
+                <div class="stat">
+                    <span>⭐ Score:</span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stat">
+                    <span>❤️ Lives:</span>
+                    <span id="lives">3</span>
+                </div>
+                <div class="stat">
+                    <span>🎯 Round:</span>
+                    <span id="level">1</span>
+                </div>
+                <div class="stat">
+                    <span>📋 URLs Left:</span>
+                    <span id="urls-remaining">10</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-area">
+            <div id="users-area"></div>
+            
+            <div id="lanes-area">
+                <div class="lane" data-lane="0"></div>
+                <div class="lane" data-lane="1"></div>
+                <div class="lane" data-lane="2"></div>
+                <div class="lane" data-lane="3"></div>
+                <div class="lane" data-lane="4"></div>
+            </div>
+
+            <div id="servers-area"></div>
+
+            <div id="level-indicator"></div>
+        </div>
+
+        <div id="start-screen">
+            <h2>🌐 FLUSH DNS</h2>
+            <p>You are a DNS server! Match incoming URLs to the correct servers before users get frustrated!</p>
+            <div class="instructions">
+                <ul>
+                    <li>👆 Click a URL, then click the matching server logo</li>
+                    <li>⚡ Be quick! Users get impatient</li>
+                    <li>🎯 Complete rounds by resolving all URLs</li>
+                    <li>📈 Each round adds new servers and gets faster</li>
+                    <li>💯 More points for quick reactions on the left!</li>
+                    <li>⚠️ Watch out for phishing domains!</li>
+                </ul>
+            </div>
+            <div style="margin: 20px 0; font-size: 14px; color: rgba(255, 255, 255, 0.8);">
+                Created by <a href="https://chaos.social/@guacamole" target="_blank" rel="noopener noreferrer" style="color: #10b981; text-decoration: none; font-weight: 600;">@guacamole@chaos.social</a>
+            </div>
+            <div class="level-selector">
+                <label for="start-level">Start at Round:</label>
+                <select id="start-level">
+                    <option value="1">1 (Beginner)</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15 (Max Servers)</option>
+                    <option value="16">16</option>
+                    <option value="17">17</option>
+                    <option value="18">18</option>
+                    <option value="19">19</option>
+                    <option value="20">20</option>
+                    <option value="21">21 (Max Speed)</option>
+                    <option value="22">22</option>
+                    <option value="23">23</option>
+                    <option value="24">24</option>
+                    <option value="25">25 (Extreme!)</option>
+                </select>
+            </div>
+            <button class="btn" onclick="startGame()">START GAME</button>
+        </div>
+
+        <div id="game-over-screen" class="hidden">
+            <h2>GAME OVER</h2>
+            <p id="final-score-text"></p>
+            <canvas id="score-card-canvas" width="800" height="600" style="display: none;"></canvas>
+            <button class="btn btn-download" onclick="downloadScoreCard()">📥 Download Score Card</button>
+            <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
+            <div style="margin-top: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.6);">
+                Created by <a href="https://chaos.social/@guacamole" target="_blank" rel="noopener noreferrer" style="color: #10b981; text-decoration: none;">@guacamole@chaos.social</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game configuration
+        const SERVERS = [
+            { id: 'search', name: 'Search Engines', color: '#4285F4', logo: '🔍', domains: ['google.com', 'duckduckgo.com', 'bing.com', 'yahoo.com'] },
+            { id: 'github', name: 'GitHub', color: '#24292e', logo: '🐙', domains: ['github.com', 'github.io', 'raw.githubusercontent.com'] },
+            { id: 'mastodon', name: 'Mastodon', color: '#6364FF', logo: '🐘', domains: ['mastodon.social', 'chaos.social', 'fosstodon.org', 'mas.to'] },
+            { id: 'stackoverflow', name: 'StackOverflow', color: '#F48024', logo: '📚', domains: ['stackoverflow.com', 'stackexchange.com'] },
+            { id: 'reddit', name: 'Reddit', color: '#FF4500', logo: '🤖', domains: ['reddit.com', 'old.reddit.com'] },
+            { id: 'gitlab', name: 'GitLab', color: '#FC6D26', logo: '🦊', domains: ['gitlab.com', 'about.gitlab.com'] },
+            { id: 'zecken', name: 'Zecken.biz', color: '#8B4513', logo: '🐞', domains: ['zecken.biz', 'www.zecken.biz'] },
+            { id: 'blathering', name: 'Blathering', color: '#9333ea', logo: '🐟', domains: ['blathering.de', 'www.blathering.de', 'podcasts.social/@blathering', 'mastodon.social/@laberwal'] },
+            { id: 'podcasts', name: 'Podcasts', color: '#059669', logo: '🎙️', domains: ['podstock.de', 'meine-url-ist-laenger-als-deine.de', 'wasnkrach.de', 'freakshow.fm', 'hobbyquerschnitt.de', 'whats-in-your-pants.de', 'haialarm-podcast.de'] },
+            { id: 'wikipedia', name: 'Wikipedia', color: '#000000', logo: '📖', domains: ['wikipedia.org', 'en.wikipedia.org', 'de.wikipedia.org'] },
+            { id: 'news', name: 'Tech News', color: '#0066cc', logo: '📰', domains: ['golem.de', 'heise.de', 'arstechnica.com', 'theverge.com', 'techcrunch.com', 'wired.com'] },
+            { id: 'hamburg', name: 'Hamburg', color: '#0077BE', logo: '⚓', domains: ['hamburg.de', 'fcstpauli.com', 'hvv.de', 'hochbahn.de'] },
+            { id: 'gaming', name: 'Gaming', color: '#9146FF', logo: '🎮', domains: ['playstation.com', 'nintendo.com', 'xbox.com', 'twitch.tv', 'ign.com', 'astrobot.com', 'horizonzerodawn.com', 'biing.de', 'biiing.de'] },
+            { id: 'discord', name: 'Discord', color: '#5865F2', logo: '🗨️', domains: ['discord.com', 'discord.gg'] }
+        ];
+
+        // Phishing domain generators - create fake domains based on real ones
+        function generatePhishingDomains(realServers) {
+            const phishingDomains = [];
+            const legitimateDomains = new Set();
+            
+            // Collect all legitimate domains first
+            realServers.forEach(server => {
+                server.domains.forEach(domain => {
+                    legitimateDomains.add(domain.toLowerCase());
+                });
+            });
+            
+            realServers.forEach(server => {
+                server.domains.forEach(domain => {
+                    const baseDomain = domain.split('.')[0];
+                    // Create typosquatting versions
+                    if (baseDomain.length > 5) {
+                        // Only add if the replacement actually changed something
+                        const variant1 = baseDomain.replace('o', '0') + '.com';
+                        if (baseDomain.includes('o') && !legitimateDomains.has(variant1.toLowerCase())) {
+                            phishingDomains.push(variant1);
+                        }
+                        
+                        const variant2 = baseDomain.replace('i', '1') + '.com';
+                        if (baseDomain.includes('i') && !legitimateDomains.has(variant2.toLowerCase())) {
+                            phishingDomains.push(variant2);
+                        }
+                        
+                        const variant3 = baseDomain.replace('l', '1') + '.com';
+                        if (baseDomain.includes('l') && !legitimateDomains.has(variant3.toLowerCase())) {
+                            phishingDomains.push(variant3);
+                        }
+                        
+                        const variant4 = baseDomain + baseDomain[baseDomain.length-1] + '.com';
+                        if (!legitimateDomains.has(variant4.toLowerCase())) {
+                            phishingDomains.push(variant4);
+                        }
+                    }
+                });
+            });
+            
+            return phishingDomains.filter((v, i, a) => a.indexOf(v) === i).slice(0, 10); // unique and limit
+        }
+
+        const MOODS = ['😊', '😐', '😟', '😠', '🤬'];
+        const USER_AVATARS = ['👨‍💻', '👩‍💻', '👨‍🔧', '👩‍🔬', '👨‍🎨', '👩‍💼', '👨‍🏫', '👩‍⚕️'];
+
+        // Game state
+        let gameState = {
+            score: 0,
+            lives: 3,
+            level: 1,
+            round: 1,
+            isPlaying: false,
+            isPaused: false,
+            selectedRequest: null,
+            activeRequests: [],
+            nextRequestId: 0,
+            spawnTimer: 0,
+            levelTimer: 0,
+            combo: 0,
+            availableServers: [],
+            urlsResolvedThisRound: 0,
+            urlsNeededForRound: 5,
+            totalUrlsSpawned: 0
+        };
+
+        // Initialize game
+        function initGame() {
+            createServerRacks();
+            createUsers();
+        }
+
+        function createServerRacks() {
+            const serversArea = document.getElementById('servers-area');
+            serversArea.innerHTML = '';
+            
+            // Start with 3 servers, add 1 per round, max 14 servers
+            const numServers = Math.min(3 + (gameState.round - 1), 14);
+            
+            // Shuffle and pick random servers
+            const shuffled = [...SERVERS].sort(() => Math.random() - 0.5);
+            gameState.availableServers = shuffled.slice(0, numServers);
+
+            // Add phishing server starting from round 3
+            if (gameState.round >= 3) {
+                const phishingDomains = generatePhishingDomains(gameState.availableServers);
+                if (phishingDomains.length > 0) {
+                    const phishingServer = {
+                        id: 'phishing',
+                        name: '⚠️ PHISHING',
+                        color: '#dc2626',
+                        logo: '☠️',
+                        domains: phishingDomains
+                    };
+                    gameState.availableServers.push(phishingServer);
+                }
+            }
+
+            // Determine grid columns based on server count
+            serversArea.classList.remove('cols-2', 'cols-3');
+            if (gameState.availableServers.length <= 5) {
+                // 1 column (1x5 grid)
+            } else if (gameState.availableServers.length <= 10) {
+                // 2 columns (2x5 grid)
+                serversArea.classList.add('cols-2');
+            } else {
+                // 3 columns (3x5 grid)
+                serversArea.classList.add('cols-3');
+            }
+
+            gameState.availableServers.forEach(server => {
+                const rack = document.createElement('div');
+                rack.className = 'server-rack';
+                rack.dataset.serverId = server.id;
+                rack.onclick = () => handleServerClick(server.id);
+                rack.title = server.name; // Tooltip for accessibility
+
+                rack.innerHTML = `
+                    <div class="server-logo" style="background: ${server.color}">
+                        ${server.logo}
+                    </div>
+                `;
+
+                serversArea.appendChild(rack);
+            });
+        }
+
+        function createUsers() {
+            const usersArea = document.getElementById('users-area');
+            usersArea.innerHTML = '';
+
+            for (let i = 0; i < 5; i++) {
+                const user = document.createElement('div');
+                user.className = 'user';
+                user.dataset.lane = i;
+
+                user.innerHTML = `
+                    <div class="user-avatar">
+                        ${USER_AVATARS[i % USER_AVATARS.length]}
+                        <div class="typing-indicator">⌨️</div>
+                    </div>
+                    <div class="user-computer"></div>
+                    <div class="user-mood">😊</div>
+                `;
+
+                usersArea.appendChild(user);
+            }
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').classList.add('hidden');
+            
+            // Get selected starting level
+            const startLevelSelect = document.getElementById('start-level');
+            const startingRound = parseInt(startLevelSelect.value);
+            
+            gameState.isPlaying = true;
+            gameState.isPaused = true; // Start paused
+            gameState.score = 0;
+            gameState.lives = 3;
+            gameState.level = startingRound;
+            gameState.round = startingRound;
+            gameState.combo = 0;
+            gameState.urlsResolvedThisRound = 0;
+            gameState.totalUrlsSpawned = 0;
+            gameState.urlsNeededForRound = 5 + (startingRound - 1) * 2;
+            updateUI();
+            initGame();
+            showRoundIndicator();
+            
+            // Start the game loop (only starts once)
+            gameLoop();
+            
+            setTimeout(() => {
+                gameState.isPaused = false; // Unpause after indicator
+            }, 2500); // Wait for round indicator to show
+        }
+
+        function gameLoop() {
+            if (!gameState.isPlaying) {
+                return; // Only stop if game is truly over
+            }
+
+            const deltaTime = 16; // Approximately 60 FPS
+            
+            if (!gameState.isPaused) {
+                gameState.spawnTimer += deltaTime;
+
+                // Check if round is complete
+                if (gameState.urlsResolvedThisRound >= gameState.urlsNeededForRound && 
+                    gameState.activeRequests.length === 0) {
+                    completeRound();
+                    // Don't return - keep the game loop running
+                }
+
+                // Keep spawning until we have enough CORRECTLY resolved URLs
+                if (gameState.urlsResolvedThisRound < gameState.urlsNeededForRound) {
+                    // Spawn rate: starts slow, gets faster with rounds
+                    // Round 1: 3000ms, Round 2: 2500ms, Round 3: 2000ms, etc.
+                    const baseSpawnRate = Math.max(3000 - (gameState.round - 1) * 200, 1000);
+                    
+                    // Additional slowdown for the very first URLs
+                    const earlyGameMultiplier = gameState.totalUrlsSpawned < 3 ? 1.5 : 1.0;
+                    const spawnRate = baseSpawnRate * earlyGameMultiplier;
+                    
+                    if (gameState.spawnTimer >= spawnRate) {
+                        spawnRequest();
+                        gameState.spawnTimer = 0;
+                    }
+                }
+
+                // Update existing requests
+                updateRequests(deltaTime);
+            }
+
+            // Always continue the game loop
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnRequest() {
+            // Don't spawn too many at once (limit based on round)
+            const maxSimultaneous = Math.min(2 + Math.floor(gameState.round / 2), 8);
+            if (gameState.activeRequests.length >= maxSimultaneous) return;
+
+            const lane = Math.floor(Math.random() * 5);
+            const server = gameState.availableServers[Math.floor(Math.random() * gameState.availableServers.length)];
+            const domain = server.domains[Math.floor(Math.random() * server.domains.length)];
+
+            // Calculate speed based on travel time
+            // Round 1: 15 seconds, Round 2: 14.5s, Round 3: 14s, etc.
+            // Minimum travel time: 5 seconds
+            const travelTimeSeconds = Math.max(15 - (gameState.round - 1) * 0.5, 5);
+            // Speed to go from 0 to 100 in travelTimeSeconds at 60fps
+            const speed = 100 / (travelTimeSeconds * 60);
+
+            const request = {
+                id: gameState.nextRequestId++,
+                url: domain,
+                serverId: server.id,
+                lane: lane,
+                position: 0,
+                speed: speed,
+                element: null,
+                age: 0,
+                processed: false // Flag to prevent multiple processing
+            };
+
+            gameState.activeRequests.push(request);
+            gameState.totalUrlsSpawned++;
+            createRequestElement(request);
+            activateUser(lane);
+        }
+
+        function createRequestElement(request) {
+            const laneElement = document.querySelector(`.lane[data-lane="${request.lane}"]`);
+            const reqElement = document.createElement('div');
+            reqElement.className = 'dns-request';
+            reqElement.textContent = request.url;
+            reqElement.dataset.requestId = request.id;
+            reqElement.style.left = '0%';
+            reqElement.onclick = () => handleRequestClick(request.id);
+
+            laneElement.appendChild(reqElement);
+            request.element = reqElement;
+        }
+
+        function updateRequests(deltaTime) {
+            gameState.activeRequests.forEach(request => {
+                if (request.processed) return; // Skip already processed requests
+                
+                request.position += request.speed;
+                request.age += deltaTime;
+
+                if (request.element) {
+                    request.element.style.left = `${request.position}%`;
+                }
+
+                // Update user mood based on request age
+                updateUserMood(request.lane, request.age);
+
+                // Check for timeout
+                if (request.position >= 100) {
+                    handleTimeout(request);
+                }
+            });
+        }
+
+        function activateUser(lane) {
+            const users = document.querySelectorAll('.user');
+            const user = users[lane];
+            user.classList.add('active');
+            const typingIndicator = user.querySelector('.typing-indicator');
+            typingIndicator.classList.add('active');
+
+            setTimeout(() => {
+                typingIndicator.classList.remove('active');
+            }, 1000);
+        }
+
+        function updateUserMood(lane, age) {
+            const users = document.querySelectorAll('.user');
+            const user = users[lane];
+            const moodElement = user.querySelector('.user-mood');
+            
+            // Much slower mood changes - based on approximately 12-15 second timeout
+            // Happy for first 8 seconds, then gradually get angrier
+            const moodIndex = Math.min(Math.floor(age / 3000), MOODS.length - 1);
+            moodElement.textContent = MOODS[moodIndex];
+        }
+
+        function handleRequestClick(requestId) {
+            // Deselect previous
+            if (gameState.selectedRequest) {
+                const prevElement = document.querySelector(`[data-request-id="${gameState.selectedRequest}"]`);
+                if (prevElement) prevElement.classList.remove('selected');
+            }
+
+            // Select new
+            gameState.selectedRequest = requestId;
+            const element = document.querySelector(`[data-request-id="${requestId}"]`);
+            if (element) {
+                element.classList.add('selected');
+                highlightServers(true);
+            }
+        }
+
+        function handleServerClick(serverId) {
+            if (gameState.selectedRequest === null || gameState.selectedRequest === undefined) return;
+
+            const request = gameState.activeRequests.find(r => r.id === gameState.selectedRequest);
+            if (!request) return;
+
+            if (request.serverId === serverId) {
+                handleCorrectMatch(request);
+            } else {
+                handleWrongMatch(request, serverId);
+            }
+
+            gameState.selectedRequest = null;
+            highlightServers(false);
+        }
+
+        function handleCorrectMatch(request) {
+            if (request.processed) return; // Already processed
+            request.processed = true;
+            
+            // Log the assignment
+            console.log(`✅ ${request.url} -> ${request.serverId} (expected: ${request.serverId})`);
+            
+            // Calculate points based on position
+            // Left side (position 0) = 600 points, Right side (position 100) = 100 points
+            const basePoints = 100;
+            const positionBonus = Math.floor((100 - request.position) * 5);
+            const points = basePoints + positionBonus;
+            
+            gameState.score += points;
+            gameState.urlsResolvedThisRound++;
+            gameState.combo++;
+            
+            // Clear selection immediately
+            if (request.element) {
+                request.element.classList.remove('selected');
+            }
+            
+            updateUI();
+
+            // Visual feedback
+            if (request.element) {
+                request.element.classList.add('matched');
+                createParticle(request.element, `+${points} 🎉`);
+            }
+
+            const serverRack = document.querySelector(`[data-server-id="${request.serverId}"]`);
+            if (serverRack) {
+                serverRack.classList.add('correct-match');
+                setTimeout(() => serverRack.classList.remove('correct-match'), 500);
+            }
+
+            // Reset user mood
+            const users = document.querySelectorAll('.user');
+            const user = users[request.lane];
+            user.classList.remove('active');
+            const moodElement = user.querySelector('.user-mood');
+            moodElement.textContent = '😊';
+
+            // Remove request after animation
+            setTimeout(() => removeRequest(request.id), 500);
+        }
+
+        function handleWrongMatch(request, selectedServerId) {
+            if (request.processed) return; // Already processed
+            request.processed = true;
+            
+            // Log the assignment
+            console.log(`❌ ${request.url} -> ${selectedServerId} (expected: ${request.serverId})`);
+            
+            gameState.combo = 0;
+            gameState.lives--;
+            
+            // Clear selection immediately
+            if (request.element) {
+                request.element.classList.remove('selected');
+            }
+            
+            updateUI();
+
+            if (request.element) {
+                request.element.classList.add('timeout');
+                createParticle(request.element, '❌ WRONG!');
+            }
+
+            // Highlight the CORRECT server to show what should have been clicked
+            const correctServerRack = document.querySelector(`[data-server-id="${request.serverId}"]`);
+            if (correctServerRack) {
+                correctServerRack.classList.add('show-correct');
+                setTimeout(() => correctServerRack.classList.remove('show-correct'), 2000);
+            }
+
+            // Angry user
+            const users = document.querySelectorAll('.user');
+            const user = users[request.lane];
+            const moodElement = user.querySelector('.user-mood');
+            moodElement.textContent = '🤬';
+            user.classList.remove('active');
+
+            setTimeout(() => {
+                moodElement.textContent = '😊';
+            }, 2000);
+
+            if (gameState.lives <= 0) {
+                gameOver();
+            }
+
+            setTimeout(() => removeRequest(request.id), 500);
+        }
+
+        function handleTimeout(request) {
+            if (request.processed) return; // Already processed
+            request.processed = true;
+            
+            // Log the timeout
+            console.log(`⏰ ${request.url} -> TIMEOUT (expected: ${request.serverId})`);
+            
+            gameState.combo = 0;
+            gameState.lives--;
+            updateUI();
+
+            if (request.element) {
+                request.element.classList.add('timeout');
+                createParticle(request.element, '⏰ TIMEOUT!');
+            }
+
+            // Highlight the CORRECT server to show what should have been clicked
+            const correctServerRack = document.querySelector(`[data-server-id="${request.serverId}"]`);
+            if (correctServerRack) {
+                correctServerRack.classList.add('show-correct');
+                setTimeout(() => correctServerRack.classList.remove('show-correct'), 2000);
+            }
+
+            // Angry user
+            const users = document.querySelectorAll('.user');
+            const user = users[request.lane];
+            const moodElement = user.querySelector('.user-mood');
+            moodElement.textContent = '🤬';
+            user.classList.remove('active');
+
+            setTimeout(() => {
+                moodElement.textContent = '😊';
+            }, 2000);
+
+            if (gameState.lives <= 0) {
+                gameOver();
+            }
+
+            setTimeout(() => removeRequest(request.id), 500);
+        }
+
+        function removeRequest(requestId) {
+            const index = gameState.activeRequests.findIndex(r => r.id === requestId);
+            if (index !== -1) {
+                const request = gameState.activeRequests[index];
+                if (request.element && request.element.parentNode) {
+                    request.element.parentNode.removeChild(request.element);
+                }
+                gameState.activeRequests.splice(index, 1);
+            }
+        }
+
+        function highlightServers(enable) {
+            const racks = document.querySelectorAll('.server-rack');
+            racks.forEach(rack => {
+                if (enable) {
+                    rack.classList.add('selectable');
+                } else {
+                    rack.classList.remove('selectable');
+                }
+            });
+        }
+
+        function createParticle(element, text) {
+            const particle = document.createElement('div');
+            particle.className = 'particle show';
+            particle.textContent = text;
+            
+            const rect = element.getBoundingClientRect();
+            particle.style.left = `${rect.left + rect.width / 2}px`;
+            particle.style.top = `${rect.top}px`;
+            
+            document.body.appendChild(particle);
+            
+            setTimeout(() => particle.remove(), 1000);
+        }
+
+        function completeRound() {
+            gameState.isPaused = true;
+            
+            // Show success message
+            const indicator = document.getElementById('level-indicator');
+            indicator.innerHTML = `
+                <div style="font-size: 64px; margin-bottom: 15px; text-align: center;">
+                    🎉 ROUND ${gameState.round} COMPLETE! 🎉
+                </div>
+                <div style="font-size: 28px; color: #10b981; text-align: center; margin-top: 20px;">
+                    ✨ Lives Reset to 3 ✨
+                </div>
+                <div style="font-size: 22px; color: #94a3b8; text-align: center; margin-top: 15px;">
+                    Preparing Round ${gameState.round + 1}...
+                </div>
+            `;
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+                startNextRound();
+            }, 3000);
+        }
+
+        function startNextRound() {
+            gameState.round++;
+            gameState.lives = 3; // Reset lives each round
+            gameState.urlsResolvedThisRound = 0;
+            gameState.totalUrlsSpawned = 0;
+            gameState.urlsNeededForRound = 5 + (gameState.round - 1) * 2; // Increase URLs needed each round
+            
+            updateUI();
+            createServerRacks(); // New random servers for new round
+            showRoundIndicator();
+            
+            setTimeout(() => {
+                gameState.isPaused = false; // Unpause to resume gameplay
+            }, 2500);
+        }
+
+        function showRoundIndicator() {
+            const indicator = document.getElementById('level-indicator');
+            indicator.innerHTML = `
+                <div style="font-size: 72px; text-align: center;">ROUND ${gameState.round}</div>
+                <div style="font-size: 24px; color: #94a3b8; margin-top: 15px; text-align: center;">Get Ready!</div>
+            `;
+            indicator.classList.add('show');
+            
+            setTimeout(() => {
+                indicator.classList.remove('show');
+            }, 2000);
+        }
+
+        function updateUI() {
+            document.getElementById('score').textContent = gameState.score;
+            document.getElementById('lives').textContent = gameState.lives;
+            document.getElementById('level').textContent = gameState.round;
+            const urlsRemaining = Math.max(0, gameState.urlsNeededForRound - gameState.urlsResolvedThisRound);
+            document.getElementById('urls-remaining').textContent = urlsRemaining;
+        }
+
+        function gameOver() {
+            gameState.isPlaying = false;
+            const gameOverScreen = document.getElementById('game-over-screen');
+            const finalScoreText = document.getElementById('final-score-text');
+            
+            finalScoreText.innerHTML = `
+                <strong>Final Score: ${gameState.score}</strong><br>
+                Round Reached: ${gameState.round}<br>
+                You were a ${getPerformanceRating()} DNS server!
+            `;
+            
+            gameOverScreen.classList.remove('hidden');
+        }
+
+        function generateScoreCard() {
+            return new Promise((resolve) => {
+                const canvas = document.getElementById('score-card-canvas');
+                const ctx = canvas.getContext('2d');
+                
+                // Clear canvas first
+                ctx.clearRect(0, 0, 800, 600);
+                
+                // Background gradient
+                const gradient = ctx.createLinearGradient(0, 0, 800, 600);
+                gradient.addColorStop(0, '#667eea');
+                gradient.addColorStop(1, '#764ba2');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, 800, 600);
+                
+                // Add decorative elements
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.beginPath();
+                ctx.arc(100, 100, 150, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(700, 500, 200, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Title
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 60px Arial, sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('🌐 FLUSH DNS', 400, 100);
+                
+                // Score box
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+                ctx.beginPath();
+                ctx.roundRect(150, 150, 500, 320, 20);
+                ctx.fill();
+                
+                // Score text
+                ctx.fillStyle = '#1e293b';
+                ctx.font = 'bold 48px Arial, sans-serif';
+                ctx.fillText('FINAL SCORE', 400, 220);
+                
+                ctx.fillStyle = '#6366f1';
+                ctx.font = 'bold 80px Arial, sans-serif';
+                ctx.fillText(gameState.score.toString(), 400, 310);
+                
+                ctx.fillStyle = '#475569';
+                ctx.font = 'bold 32px Arial, sans-serif';
+                ctx.fillText(`Round: ${gameState.round}`, 400, 370);
+                
+                // Rating
+                const rating = getPerformanceRating();
+                ctx.fillStyle = '#10b981';
+                ctx.font = 'bold 36px Arial, sans-serif';
+                ctx.fillText(rating, 400, 430);
+                
+                // Author
+                ctx.fillStyle = '#ffffff';
+                ctx.font = '20px Arial, sans-serif';
+                ctx.fillText('by @guacamole@chaos.social', 400, 550);
+                
+                // Small delay to ensure rendering is complete
+                setTimeout(() => resolve(canvas), 100);
+            });
+        }
+
+        async function downloadScoreCard() {
+            try {
+                const canvas = await generateScoreCard();
+                
+                // Create download link
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.download = `flush-dns-score-${gameState.score}.png`;
+                    link.href = url;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                }, 'image/png');
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                alert('Download failed. Please try again!');
+            }
+        }
+
+        function getPerformanceRating() {
+            // Rating based on round reached (level-based)
+            if (gameState.round > 10) return '🏆 LEGENDARY';
+            if (gameState.round >= 8) return '⭐ EXPERT';
+            if (gameState.round >= 6) return '💪 ADVANCED';
+            if (gameState.round >= 4) return '👍 INTERMEDIATE';
+            return '🌱 BEGINNER';
+        }
+
+        // Initialize on load
+        window.onload = initGame;
+
+        // Polyfill for canvas roundRect (not available in all browsers)
+        if (!CanvasRenderingContext2D.prototype.roundRect) {
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, width, height, radius) {
+                this.beginPath();
+                this.moveTo(x + radius, y);
+                this.lineTo(x + width - radius, y);
+                this.quadraticCurveTo(x + width, y, x + width, y + radius);
+                this.lineTo(x + width, y + height - radius);
+                this.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+                this.lineTo(x + radius, y + height);
+                this.quadraticCurveTo(x, y + height, x, y + height - radius);
+                this.lineTo(x, y + radius);
+                this.quadraticCurveTo(x, y, x + radius, y);
+                this.closePath();
+                return this;
+            };
+        }
+    </script>
+</body>
+</html>
