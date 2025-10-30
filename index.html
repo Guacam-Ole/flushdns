@@ -639,6 +639,85 @@
                 min-width: 300px;
             }
         }
+
+        /* Height-based media queries for smaller screens */
+        @media (max-height: 800px) {
+            #game-header { padding: 8px 15px; }
+            #game-header h1 { font-size: 20px; }
+            .stats { font-size: 14px; gap: 12px; }
+            
+            #users-area { padding: 10px 8px; gap: 8px; }
+            #servers-area { padding: 10px 8px; gap: 8px; }
+            
+            .user { padding: 6px; gap: 4px; }
+            .user-avatar { width: 40px; height: 40px; font-size: 20px; }
+            .user-computer { width: 32px; height: 22px; }
+            .user-computer::after { width: 40px; }
+            .user-mood { font-size: 16px; }
+            
+            .server-logo { font-size: 32px; }
+            #servers-area.cols-2 .server-logo { font-size: 28px; }
+            #servers-area.cols-3 .server-logo { font-size: 24px; }
+            
+            .dns-request { font-size: 13px; padding: 6px 10px; }
+        }
+
+        @media (max-height: 700px) {
+            #game-header { padding: 6px 12px; }
+            #game-header h1 { font-size: 18px; }
+            .stats { font-size: 13px; gap: 10px; }
+            
+            #users-area { padding: 8px 6px; gap: 6px; }
+            #servers-area { padding: 8px 6px; gap: 6px; }
+            
+            .user { padding: 5px; gap: 3px; border-radius: 8px; }
+            .user-avatar { width: 35px; height: 35px; font-size: 18px; }
+            .user-computer { width: 28px; height: 20px; }
+            .user-computer::after { width: 35px; height: 3px; bottom: -4px; }
+            .user-mood { font-size: 14px; }
+            
+            .server-rack { border-radius: 8px; }
+            .server-logo { font-size: 28px; border-radius: 8px; }
+            #servers-area.cols-2 .server-logo { font-size: 24px; }
+            #servers-area.cols-3 .server-logo { font-size: 20px; }
+            
+            .dns-request { font-size: 12px; padding: 5px 8px; border-radius: 8px; }
+            
+            #level-indicator { 
+                font-size: 42px; 
+                padding: 25px 35px;
+                min-width: 280px;
+            }
+        }
+
+        @media (max-height: 600px) {
+            #game-header { padding: 4px 10px; }
+            #game-header h1 { font-size: 16px; }
+            .stats { font-size: 12px; gap: 8px; }
+            
+            #users-area { padding: 6px 4px; gap: 4px; }
+            #servers-area { padding: 6px 4px; gap: 4px; }
+            
+            .user { padding: 4px; gap: 2px; border-radius: 6px; }
+            .user-avatar { width: 30px; height: 30px; font-size: 16px; }
+            .user-computer { width: 24px; height: 18px; }
+            .user-computer::after { width: 30px; height: 2px; bottom: -3px; }
+            .user-mood { font-size: 12px; }
+            .url-bubble { font-size: 10px; padding: 4px 8px; }
+            
+            .server-rack { border-radius: 6px; }
+            .server-logo { font-size: 24px; border-radius: 6px; }
+            #servers-area.cols-2 .server-logo { font-size: 20px; }
+            #servers-area.cols-3 .server-logo { font-size: 18px; }
+            
+            .dns-request { font-size: 11px; padding: 4px 6px; border-radius: 6px; }
+            
+            #level-indicator { 
+                font-size: 36px; 
+                padding: 20px 30px;
+                min-width: 250px;
+            }
+        }
     </style>
 </head>
 <body>
