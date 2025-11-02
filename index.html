@@ -1442,7 +1442,7 @@
             <h2>GAME OVER</h2>
             <p id="final-score-text"></p>
             <canvas id="score-card-canvas" width="800" height="600" style="display: none;"></canvas>
-            <button class="btn btn-download" onclick="downloadScoreCard()">📥 Download Score Card</button>
+            <button class="btn btn-download" onclick="downloadScoreCard()">📄 Show Score Card</button>
             <button class="btn" onclick="location.reload()">PLAY AGAIN</button>
             <div style="margin-top: 20px; font-size: 14px; color: rgba(255, 255, 255, 0.6);">
                 Created by <a href="https://chaos.social/@guacamole" target="_blank" rel="noopener noreferrer" style="color: #10b981; text-decoration: none;">@guacamole@chaos.social</a>
@@ -2201,21 +2201,46 @@
             try {
                 const canvas = await generateScoreCard();
                 
-                // Create download link
-                canvas.toBlob((blob) => {
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.download = `flush-dns-score-${gameState.score}.png`;
-                    link.href = url;
-                    document.body.appendChild(link);
-                    link.click();
-                    document.body.removeChild(link);
-                    URL.revokeObjectURL(url);
-                }, 'image/png');
+                // Open image in new tab
+                const imageUrl = canvas.toDataURL('image/png');
+                const newTab = window.open();
+                if (newTab) {
+                    newTab.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <title>Flush DNS Score Card</title>
+                            <style>
+                                body {
+                                    margin: 0;
+                                    padding: 20px;
+                                    background: #1e293b;
+                                    display: flex;
+                                    justify-content: center;
+                                    align-items: center;
+                                    min-height: 100vh;
+                                }
+                                img {
+                                    max-width: 100%;
+                                    height: auto;
+                                    border-radius: 10px;
+                                    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+                                }
+                            </style>
+                        </head>
+                        <body>
+                            <img src="${imageUrl}" alt="Flush DNS Score Card">
+                        </body>
+                        </html>
+                    `);
+                    newTab.document.close();
+                } else {
+                    alert('Please allow pop-ups to view your score card!');
+                }
                 
             } catch (error) {
-                console.error('Download error:', error);
-                alert('Download failed. Please try again!');
+                console.error('Error generating score card:', error);
+                alert('Failed to generate score card. Please try again!');
             }
         }
 
