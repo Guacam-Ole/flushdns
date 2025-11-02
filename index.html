@@ -284,6 +284,31 @@
                 margin-left: 4px !important;
             }
 
+            #level-indicator { 
+                font-size: 28px; 
+                padding: 15px 20px;
+                min-width: 200px;
+                max-width: 90%;
+            }
+
+            #start-screen, #game-over-screen {
+                padding: 10px;
+            }
+
+            .instructions {
+                padding: 10px;
+                margin: 10px 0;
+            }
+
+            .instructions li {
+                margin: 4px 0;
+            }
+
+            .level-selector {
+                padding: 10px;
+                margin: 10px 0;
+            }
+
             #users-area {
                 width: 14%;
                 padding: 2px 1px;
@@ -372,6 +397,53 @@
                 margin-left: 3px !important;
             }
 
+            #level-indicator { 
+                font-size: 22px; 
+                padding: 12px 16px;
+                min-width: 160px;
+                max-width: 90%;
+                border-radius: 12px;
+                border: 2px solid rgba(99, 102, 241, 0.5);
+            }
+
+            #start-screen, #game-over-screen {
+                padding: 8px;
+            }
+
+            #start-screen h2, #game-over-screen h2 {
+                font-size: clamp(24px, 5vw, 32px);
+                margin-bottom: 10px;
+            }
+
+            #start-screen p, #game-over-screen p {
+                font-size: clamp(12px, 2vw, 16px);
+                margin-bottom: 15px;
+            }
+
+            .instructions {
+                padding: 8px;
+                margin: 8px 0;
+            }
+
+            .instructions ul {
+                font-size: clamp(11px, 1.8vw, 14px);
+            }
+
+            .instructions li {
+                margin: 3px 0;
+            }
+
+            .level-selector {
+                padding: 8px;
+                margin: 8px 0;
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 10px 25px;
+                font-size: clamp(14px, 2vw, 16px);
+            }
+
             #users-area {
                 width: 13%;
                 padding: 1px 0;
@@ -456,6 +528,51 @@
                 padding: 2px 4px !important;
                 font-size: 7px !important;
                 margin-left: 2px !important;
+            }
+
+            #level-indicator { 
+                font-size: 18px; 
+                padding: 10px 14px;
+                min-width: 140px;
+                max-width: 90%;
+                border-radius: 10px;
+            }
+
+            #start-screen, #game-over-screen {
+                padding: 5px;
+            }
+
+            #start-screen h2, #game-over-screen h2 {
+                font-size: 20px;
+                margin-bottom: 8px;
+            }
+
+            #start-screen p, #game-over-screen p {
+                font-size: 11px;
+                margin-bottom: 12px;
+            }
+
+            .instructions {
+                padding: 6px;
+                margin: 6px 0;
+            }
+
+            .instructions ul {
+                font-size: 10px;
+            }
+
+            .instructions li {
+                margin: 2px 0;
+            }
+
+            .level-selector {
+                padding: 6px;
+                margin: 6px 0;
+            }
+
+            .btn {
+                padding: 8px 20px;
+                font-size: 12px;
             }
 
             #users-area {
@@ -1962,9 +2079,29 @@
 
         function showRoundIndicator() {
             const indicator = document.getElementById('level-indicator');
+            
+            // Responsive font sizes based on screen dimensions
+            let mainFontSize = '72px';
+            let subFontSize = '24px';
+            let marginTop = '15px';
+            
+            if (window.innerWidth <= 500 || window.innerHeight <= 400) {
+                mainFontSize = '22px';
+                subFontSize = '10px';
+                marginTop = '8px';
+            } else if (window.innerWidth <= 700 || window.innerHeight <= 500) {
+                mainFontSize = '28px';
+                subFontSize = '12px';
+                marginTop = '10px';
+            } else if (window.innerWidth <= 900) {
+                mainFontSize = '36px';
+                subFontSize = '16px';
+                marginTop = '12px';
+            }
+            
             indicator.innerHTML = `
-                <div style="font-size: 72px; text-align: center;">ROUND ${gameState.round}</div>
-                <div style="font-size: 24px; color: #94a3b8; margin-top: 15px; text-align: center;">Get Ready!</div>
+                <div style="font-size: ${mainFontSize}; text-align: center;">ROUND ${gameState.round}</div>
+                <div style="font-size: ${subFontSize}; color: #94a3b8; margin-top: ${marginTop}; text-align: center;">Get Ready!</div>
             `;
             indicator.classList.add('show');
             
