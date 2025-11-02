@@ -87,6 +87,24 @@
             }
         }
 
+        /* Fullscreen mode optimizations */
+        :fullscreen #game-container,
+        :-webkit-full-screen #game-container,
+        :-moz-full-screen #game-container,
+        :-ms-fullscreen #game-container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        :fullscreen body,
+        :-webkit-full-screen body,
+        :-moz-full-screen body,
+        :-ms-fullscreen body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
         /* Mobile optimizations */
         @media (max-width: 768px) {
             button, .btn {
@@ -260,6 +278,12 @@
                 font-size: 9px;
             }
 
+            #exit-fullscreen-btn {
+                padding: 4px 6px !important;
+                font-size: 9px !important;
+                margin-left: 4px !important;
+            }
+
             #users-area {
                 width: 14%;
                 padding: 2px 1px;
@@ -342,6 +366,12 @@
                 font-size: 8px;
             }
 
+            #exit-fullscreen-btn {
+                padding: 3px 5px !important;
+                font-size: 8px !important;
+                margin-left: 3px !important;
+            }
+
             #users-area {
                 width: 13%;
                 padding: 1px 0;
@@ -420,6 +450,12 @@
 
             .stat {
                 font-size: 7px;
+            }
+
+            #exit-fullscreen-btn {
+                padding: 2px 4px !important;
+                font-size: 7px !important;
+                margin-left: 2px !important;
             }
 
             #users-area {
@@ -1211,6 +1247,9 @@
                     <span>📋 URLs Left:</span>
                     <span id="urls-remaining">10</span>
                 </div>
+                <button id="exit-fullscreen-btn" onclick="exitFullscreen()" style="display: none; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; margin-left: 10px;">
+                    ⛶ Exit Fullscreen
+                </button>
             </div>
         </div>
 
@@ -1275,6 +1314,9 @@
                     <option value="24">24</option>
                     <option value="25">25 (Extreme!)</option>
                 </select>
+            </div>
+            <div style="margin: 15px 0; padding: 10px; background: rgba(16, 185, 129, 0.2); border-radius: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.9);">
+                📱 On mobile devices, the game will automatically enter fullscreen mode for the best experience
             </div>
             <button class="btn" onclick="startGame()">START GAME</button>
         </div>
@@ -1463,6 +1505,9 @@
         function startGame() {
             document.getElementById('start-screen').classList.add('hidden');
             
+            // Request fullscreen on small screens to maximize play area
+            requestFullscreenIfNeeded();
+            
             // Get selected starting level
             const startLevelSelect = document.getElementById('start-level');
             const startingRound = parseInt(startLevelSelect.value);
@@ -1488,6 +1533,57 @@
                 gameState.isPaused = false; // Unpause after indicator
             }, 2500); // Wait for round indicator to show
         }
+
+        function requestFullscreenIfNeeded() {
+            // Only request fullscreen on small screens (mobile devices)
+            if (window.innerWidth <= 900 || window.innerHeight <= 500) {
+                const elem = document.documentElement;
+                
+                // Try to enter fullscreen with various browser prefixes
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen().catch(err => {
+                        console.log('Fullscreen request failed:', err);
+                    });
+                } else if (elem.webkitRequestFullscreen) { /* Safari */
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { /* IE11 */
+                    elem.msRequestFullscreen();
+                } else if (elem.mozRequestFullScreen) { /* Firefox */
+                    elem.mozRequestFullScreen();
+                }
+            }
+        }
+
+        function exitFullscreen() {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                document.mozCancelFullScreen();
+            }
+        }
+
+        // Listen for fullscreen changes to show/hide exit button
+        function updateFullscreenButton() {
+            const btn = document.getElementById('exit-fullscreen-btn');
+            const isFullscreen = document.fullscreenElement || 
+                                document.webkitFullscreenElement || 
+                                document.mozFullScreenElement || 
+                                document.msFullscreenElement;
+            
+            if (btn) {
+                btn.style.display = isFullscreen ? 'block' : 'none';
+            }
+        }
+
+        // Add fullscreen change listeners
+        document.addEventListener('fullscreenchange', updateFullscreenButton);
+        document.addEventListener('webkitfullscreenchange', updateFullscreenButton);
+        document.addEventListener('mozfullscreenchange', updateFullscreenButton);
+        document.addEventListener('MSFullscreenChange', updateFullscreenButton);
 
         function gameLoop() {
             if (!gameState.isPlaying) {
