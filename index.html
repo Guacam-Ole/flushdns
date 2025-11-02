@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>Flush DNS - The Ultimate DNS Matching Game</title>
     
     <!-- OpenGraph Meta Tags -->
@@ -31,6 +34,440 @@
             display: flex;
             justify-content: center;
             align-items: center;
+        }
+
+        /* Rotation Warning Overlay */
+        #rotation-warning {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        #rotation-warning svg {
+            width: 100px;
+            height: 100px;
+            margin-bottom: 20px;
+            animation: rotate 2s ease-in-out infinite;
+        }
+
+        @keyframes rotate {
+            0%, 100% { transform: rotate(0deg); }
+            50% { transform: rotate(90deg); }
+        }
+
+        #rotation-warning h2 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        #rotation-warning p {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+
+        /* Show rotation warning only in portrait mode on mobile devices */
+        @media (orientation: portrait) and (max-width: 768px) {
+            #rotation-warning {
+                display: flex !important;
+            }
+            
+            #game-container {
+                display: none !important;
+            }
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            button, .btn {
+                min-height: 44px; /* iOS recommended touch target size */
+                font-size: 16px !important; /* Prevents zoom on iOS */
+            }
+            
+            .server-rack {
+                min-height: 60px;
+                min-width: 60px;
+            }
+            
+            .request-box {
+                min-height: 50px;
+                padding: 8px 12px !important;
+                font-size: 14px !important;
+            }
+        }
+
+        /* Responsive layout adjustments for smaller screens */
+        @media (max-width: 1200px) {
+            #users-area {
+                width: 18%;
+                padding: 10px 5px;
+                gap: 8px;
+            }
+
+            #servers-area {
+                width: 28%;
+                padding: 10px 5px;
+                gap: 8px;
+            }
+
+            .user-avatar {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .user-computer {
+                width: 35px;
+                height: 24px;
+            }
+
+            .server-logo {
+                font-size: clamp(24px, 4vw, 48px);
+            }
+
+            .server-name {
+                font-size: clamp(10px, 1.5vw, 14px);
+            }
+
+            .dns-request {
+                padding: 8px 12px;
+                font-size: clamp(12px, 1.8vw, 16px);
+            }
+
+            .url-bubble {
+                font-size: clamp(9px, 1.2vw, 11px);
+                padding: 4px 8px;
+            }
+        }
+
+        /* Extra small screens - ultra compact mode */
+        @media (max-width: 900px) {
+            #users-area {
+                width: 15%;
+                padding: 5px 2px;
+                gap: 3px;
+                border-right: 2px solid #6366f1;
+            }
+
+            #servers-area {
+                width: 30%;
+                padding: 5px 2px;
+                gap: 3px;
+                border-left: 2px solid #475569;
+            }
+
+            .user {
+                padding: 3px;
+                gap: 2px;
+                border-radius: 6px;
+            }
+
+            .user.active {
+                transform: scale(1.02);
+            }
+
+            .user-avatar {
+                width: 28px;
+                height: 28px;
+                font-size: 14px;
+            }
+
+            .user-computer {
+                width: 20px;
+                height: 14px;
+            }
+
+            .user-computer::after {
+                width: 24px;
+                height: 2px;
+                bottom: -3px;
+            }
+
+            .user-mood {
+                font-size: 12px;
+            }
+
+            .url-bubble {
+                font-size: 7px;
+                padding: 2px 4px;
+                max-width: 95%;
+            }
+
+            .typing-indicator {
+                font-size: 8px;
+            }
+
+            #game-header {
+                padding: 8px 10px;
+            }
+
+            #game-header h1 {
+                font-size: clamp(16px, 2.8vw, 22px);
+            }
+
+            .stat {
+                font-size: clamp(10px, 1.5vw, 14px);
+            }
+
+            .server-rack {
+                padding: 0;
+                border-radius: 6px;
+                border: 2px solid transparent;
+            }
+
+            .server-logo {
+                font-size: clamp(18px, 3vw, 32px);
+            }
+
+            .server-name {
+                font-size: clamp(7px, 1vw, 11px);
+                padding: 2px;
+            }
+
+            .dns-request {
+                padding: 6px 10px;
+                font-size: clamp(11px, 1.6vw, 14px);
+                border: 2px solid #3b82f6;
+            }
+        }
+
+        /* Very small screens - minimum viable layout */
+        @media (max-width: 700px), (max-height: 500px) {
+            #game-header {
+                padding: 4px 6px;
+                min-height: 0;
+            }
+
+            #game-header h1 {
+                font-size: 12px;
+            }
+
+            .stats {
+                gap: 6px;
+            }
+
+            .stat {
+                font-size: 9px;
+            }
+
+            #users-area {
+                width: 14%;
+                padding: 2px 1px;
+                gap: 1px;
+            }
+
+            #servers-area {
+                width: 32%;
+                padding: 2px 1px;
+                gap: 1px;
+            }
+
+            .user {
+                padding: 1px;
+                gap: 1px;
+                border-radius: 4px;
+            }
+
+            .user-avatar {
+                width: 20px;
+                height: 20px;
+                font-size: 11px;
+            }
+
+            .user-computer {
+                width: 14px;
+                height: 9px;
+            }
+
+            .user-computer::after {
+                width: 16px;
+                height: 1px;
+                bottom: -2px;
+            }
+
+            .user-mood {
+                font-size: 9px;
+            }
+
+            .url-bubble {
+                font-size: 6px;
+                padding: 1px 2px;
+            }
+
+            .typing-indicator {
+                display: none; /* Hide typing indicator on very small screens */
+            }
+
+            .server-logo {
+                font-size: 14px;
+            }
+
+            .server-name {
+                font-size: 6px;
+                padding: 1px;
+            }
+
+            .dns-request {
+                padding: 4px 6px;
+                font-size: 9px;
+                border-radius: 8px;
+            }
+        }
+
+        /* Ultra small screens - absolute minimum */
+        @media (max-width: 500px) {
+            #game-header {
+                padding: 3px 4px;
+            }
+
+            #game-header h1 {
+                font-size: 10px;
+            }
+
+            .stats {
+                gap: 4px;
+            }
+
+            .stat {
+                font-size: 8px;
+            }
+
+            #users-area {
+                width: 13%;
+                padding: 1px 0;
+                gap: 0;
+            }
+
+            #servers-area {
+                width: 33%;
+                padding: 1px 0;
+                gap: 0;
+            }
+
+            .user {
+                padding: 0;
+                gap: 0;
+                border-radius: 3px;
+                box-shadow: none;
+            }
+
+            .user.active {
+                transform: scale(1.01);
+                border: 1px solid #6366f1;
+            }
+
+            .user-avatar {
+                width: 16px;
+                height: 16px;
+                font-size: 9px;
+            }
+
+            .user-computer {
+                display: none; /* Hide computer icon */
+            }
+
+            .user-mood {
+                font-size: 8px;
+            }
+
+            .url-bubble {
+                font-size: 5px;
+                padding: 0 1px;
+                border-radius: 3px;
+            }
+
+            .server-rack {
+                border-radius: 4px;
+                border: 1px solid transparent;
+            }
+
+            .server-logo {
+                font-size: 12px;
+            }
+
+            .server-name {
+                font-size: 5px;
+                padding: 0;
+            }
+
+            .dns-request {
+                padding: 3px 5px;
+                font-size: 8px;
+                border-radius: 6px;
+                border: 2px solid #3b82f6;
+            }
+        }
+
+        /* Very short screens - ensure vertical fit */
+        @media (max-height: 400px) {
+            #game-header {
+                padding: 2px 4px;
+            }
+
+            #game-header h1 {
+                font-size: 9px;
+            }
+
+            .stat {
+                font-size: 7px;
+            }
+
+            #users-area {
+                padding: 0;
+                gap: 0;
+            }
+
+            #servers-area {
+                padding: 0;
+                gap: 0;
+            }
+
+            .user {
+                padding: 0;
+                gap: 0;
+            }
+
+            .user-avatar {
+                width: 14px;
+                height: 14px;
+                font-size: 8px;
+            }
+
+            .user-computer {
+                display: none;
+            }
+
+            .user-mood {
+                font-size: 7px;
+            }
+
+            .url-bubble {
+                font-size: 5px;
+                padding: 0;
+            }
+
+            .server-logo {
+                font-size: 10px;
+            }
+
+            .server-name {
+                font-size: 5px;
+            }
+
+            .dns-request {
+                padding: 2px 4px;
+                font-size: 7px;
+            }
         }
 
         #game-container {
@@ -232,6 +669,11 @@
             box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
         }
 
+        .dns-request:active {
+            transform: translateY(-1px) scale(0.98);
+            box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+        }
+
         .dns-request.selected {
             border-color: #10b981;
             background: #d1fae5;
@@ -305,6 +747,11 @@
         .server-rack:hover {
             transform: scale(1.05);
             border-color: #6366f1;
+        }
+
+        .server-rack:active {
+            transform: scale(0.98);
+            border-color: #10b981;
         }
 
         .server-rack.selectable {
@@ -733,6 +1180,17 @@
     </style>
 </head>
 <body>
+    <!-- Rotation Warning for Portrait Mode on Mobile -->
+    <div id="rotation-warning">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="2" width="18" height="20" rx="2" ry="2"/>
+            <path d="M7 22h10"/>
+            <path d="M12 17v5"/>
+        </svg>
+        <h2>Please Rotate Your Device</h2>
+        <p>This game is best played in landscape mode</p>
+    </div>
+
     <div id="game-container">
         <div id="game-header">
             <h1>🌐 FLUSH DNS</h1>
@@ -1050,9 +1508,9 @@
 
                 // Keep spawning until we have enough CORRECTLY resolved URLs
                 if (gameState.urlsResolvedThisRound < gameState.urlsNeededForRound) {
-                    // Spawn rate: starts moderately fast, gets even faster with rounds
-                    // Round 1: 2000ms, Round 2: 1700ms, Round 3: 1400ms, etc.
-                    const baseSpawnRate = Math.max(2000 - (gameState.round - 1) * 300, 800);
+                    // Spawn rate: starts slow, gets faster with rounds
+                    // Round 1: 3000ms, Round 2: 2500ms, Round 3: 2000ms, etc.
+                    const baseSpawnRate = Math.max(3000 - (gameState.round - 1) * 200, 1000);
                     
                     // Additional slowdown for the very first URLs
                     const earlyGameMultiplier = gameState.totalUrlsSpawned < 3 ? 1.5 : 1.0;
@@ -1082,9 +1540,9 @@
             const domain = server.domains[Math.floor(Math.random() * server.domains.length)];
 
             // Calculate speed based on travel time
-            // Round 1: 10 seconds, Round 2: 9s, Round 3: 8s, etc.
-            // Minimum travel time: 3 seconds for intense gameplay!
-            const travelTimeSeconds = Math.max(10 - (gameState.round - 1) * 1, 3);
+            // Round 1: 15 seconds, Round 2: 14.5s, Round 3: 14s, etc.
+            // Minimum travel time: 5 seconds
+            const travelTimeSeconds = Math.max(15 - (gameState.round - 1) * 0.5, 5);
             // Speed to go from 0 to 100 in travelTimeSeconds at 60fps
             const speed = 100 / (travelTimeSeconds * 60);
 
